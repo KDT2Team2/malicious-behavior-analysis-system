@@ -1,6 +1,6 @@
 from vbox import *
 
-def uploadfile_to_vm(vm_name:str, local_path:str, remote_path:str)
+def uploadfile_to_vm(vm_name:str, local_path:str, remote_path:str):
     # 구현
     pass
 
