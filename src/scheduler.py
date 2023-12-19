@@ -1,61 +1,81 @@
+import subprocess
+import requests
+import json
+import os
+import time
+from urllib.parse import unquote
 from vbox import *
+from commander import *
 
-def uploadfile_to_vm(vm_name:str, local_path:str, remote_path:str):
-    # 구현
-    pass
+VM_NAME = "WinDev2311Eval"
+AGENT_URL = 'http://localhost:5000'
 
-def exec_remote_path(vm_name:str, remote_path:str, argument:str, timeout:int):
-    # 구현
-    pass
+def start_vm():
+    try:
+        subprocess.run(["VBoxManage", "startvm", VM_NAME])
+        print(f"{VM_NAME} 가상머신이 시작되었습니다.")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"가상머신 시작 중 오류 발생: {e}")
+        return False
 
-def exec_event_export(vm_name:str):
-    # 구현
-    pass
+def wait_for_vm_start():
+    max_attempts = 10  # 적절한 횟수로 조정
+    attempts = 0
 
-def download_remote_file(vm_name:str, remote_path:str, local_path:str):
-    # 구현
-    pass
+    while attempts < max_attempts:
+        try:
+            subprocess.run(["VBoxManage", "guestproperty", "get", VM_NAME, "/VirtualBox/GuestInfo/Net/0/V4/IP"])
+            print(f"{VM_NAME} 가상머신이 시작 및 사용 가능한 상태입니다.")
+            return True
+        except subprocess.CalledProcessError:
+            attempts += 1
+            print(f"가상머신 시작 대기 중 ({attempts}/{max_attempts})...")
+            time.sleep(5)  # 5초 대기 후 다시 시도
 
-def connect_db(db_address:str):
-    # 구현
-    pass
+    print("가상머신이 시작되지 않았거나 사용 가능한 상태가 아닙니다.")
+    return False
 
-def close_db(db_handle):
-    # 구현
-    pass
+def stop_vm():
+    try:
+        subprocess.run(["VBoxManage", "controlvm", VM_NAME, "poweroff"])
+        print(f"{VM_NAME} 가상머신이 종료되었습니다.")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"가상머신 종료 중 오류 발생: {e}")
+        return False
 
-def upload_to_db(csv_path:str, index_name:str, db_handle):
-    # 구현
-    pass
+# 기존 함수들과 함께 추가된 함수들
 
-def start_analyze(vm_name:str, file_path:str, argument:str, timeout:int):
-    # 가상머신 시작
-    start_vm(vm_name)
-    # 분석대상 파일을 Real 머신에서 가상머신으로 업로드
-    remote_path = 'c:\\target.exe'
-    uploadfile_to_vm(vm_name, file_path, remote_path)
-    
-    # 업로드 분석대상 파일 실행
-    exec_remote_path(vm_name, remote_path, argument, timeout)
-    
-    # Windows Sysmon 실행결과 이벤트 로그를 csv로 export(가상머신 내부에 결과 생성)
-    exec_event_export(vm_name)
-    
-    # 가상머신 내부에 존재하는 이벤트 로그 csv 파일을 Real머신 환경으로 다운로드
-    download_remote_file(vm_name, <REMOTE_EVENT_CSV_PATH>, <LOCAL_CSV_PATH>)
-    
-    # 가상머신 중지 및 원래 상태로 rollback
-    stop_vm(vm_name)
-    rollback_vm(vm_name, <SNAPSHOT_NAME>)
+def start_analyze(vm_name, file_path, snapshot_name, argument, timeout):
+    try:
+        rollback_vm(snapshot_name)
+        start_vm()
+        wait_for_vm_start()
+        remote_path = 'c:\\target.exe'
+        upload_file(file_path)
+        # exec_remote_path(vm_name, remote_path, argument, timeout)
+        # exec_event_export(vm_name)
+        download_file("..\\..\\..\\..\\..\\..\\..\\..\\..\\..\\..\\Windows\\System32\\winevt\\Logs\\Microsoft-Windows-Sysmon%4Operational.evtx", 'C:/Users/dealu/OneDrive/바탕 화면/프로젝트/project 2-2/test/sys_test.evtx')
+        stop_vm()
+        rollback_vm(snapshot_name)
+        # db_handler = connect_db('YourDatabaseAddress')
+        # upload_to_db('C:\\path\\to\\your\\local\\event\\log.csv', 'YourIndexName', db_handler)
+        # close_db(db_handler)
+    except Exception as e:
+        print(f"분석 중 오류 발생: {e}")
 
-    # 다운로드 받은 이벤트 로그를 이벤트 로그 저장소에 업로드
-    db_handler = connect_db(<DATABASE_ADDRESS>)
-    upload_to_db(<LOCAL_CSV_PATH>, <INDEXNAME>, db_handler)
-    close_db(db_handler)
-
-if __name__ == '__main__':
+def main():
     analyze_target_path = './test.exe'
-    vm_name = 'windows_10_sandbox'
+    vm_name = 'WinDev2311Eval'
     argument = ''
     timeout = 30
-    start_analyze(vm_name, analyze_target_path, argument, timeout)
+    snapshot_name = "snapshot6"
+
+    try:
+        start_analyze(vm_name, analyze_target_path, snapshot_name, argument, timeout)
+    except Exception as e:
+        print(f"자동 분석 중 오류 발생: {e}")
+
+if __name__ == "__main__":
+    main()
