@@ -45,18 +45,34 @@ def stop_vm():
         print(f"가상머신 종료 중 오류 발생: {e}")
         return False
 
-# 기존 함수들과 함께 추가된 함수들
+def exec_remote_path(vm_name, remote_path, argument, timeout):
+    try:
+        subprocess.run(remote_path, timeout=timeout, check=True)
+        print(f"{remote_path} 파일이 실행되었습니다.")
+    except subprocess.CalledProcessError as e:
+        print(f"파일 실행 중 오류 발생: {e}")
+    except subprocess.TimeoutExpired:
+        print(f"파일 실행 시간이 초과되었습니다.")
+
+def exec_event_export(vm_name):
+    try:
+        subprocess.run("..\\Sysmon\\Sysmon.exe", check=True)
+        print("Sysmon이 실행되었습니다.")
+    except subprocess.CalledProcessError as e:
+        print(f"Sysmon 실행 중 오류 발생: {e}")
+
+
 
 def start_analyze(vm_name, file_path, snapshot_name, argument, timeout):
     try:
         rollback_vm(snapshot_name)
         start_vm()
         wait_for_vm_start()
-        remote_path = 'c:\\target.exe'
-        upload_file(file_path)
-        # exec_remote_path(vm_name, remote_path, argument, timeout)
+        # upload_file(file_path)
+        # exec_remote_path(vm_name, file_path, argument, timeout)
         # exec_event_export(vm_name)
-        download_file("..\\..\\..\\..\\..\\..\\..\\..\\..\\..\\..\\Windows\\System32\\winevt\\Logs\\Microsoft-Windows-Sysmon%4Operational.evtx", 'C:/Users/dealu/OneDrive/바탕 화면/프로젝트/project 2-2/test/sys_test.evtx')
+        run_sysmon()
+        download_file("..\\..\\..\\..\\..\\..\\..\\..\\..\\..\\..\\Windows\\System32\\winevt\\Logs\\Microsoft-Windows-Sysmon%4Operational.evtx", 'C:/Users/dealu/OneDrive/바탕 화면/프로젝트/project 2-2/test/sys_test2.evtx')
         stop_vm()
         rollback_vm(snapshot_name)
         # db_handler = connect_db('YourDatabaseAddress')
@@ -70,7 +86,7 @@ def main():
     vm_name = 'WinDev2311Eval'
     argument = ''
     timeout = 30
-    snapshot_name = "snapshot6"
+    snapshot_name = "snapshot7"
 
     try:
         start_analyze(vm_name, analyze_target_path, snapshot_name, argument, timeout)
