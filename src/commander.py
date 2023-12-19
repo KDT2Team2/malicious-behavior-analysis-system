@@ -1,6 +1,7 @@
 import requests
 import json
 import os
+from urllib.parse import unquote
 
 AGENT_URL = 'http://localhost:5000'
 
@@ -32,10 +33,14 @@ def download_file(file_name, save_path):
                 file.write(chunk)
         print("\nDownload Complete")
     else:
-        print("\nDownload Failed:", response.text)
+        print(f"\nDownload Failed. Status Code: {response.status_code}, Response Text: {response.text}")
+
 
 if __name__ == '__main__':
+    get_request()
     # 보낼 파일 이름
-    upload_file("C:/Users/dealu/OneDrive/바탕 화면/프로젝트/project 2-2/test.txt")
+    # upload_file("test.exe")
     # 가상환경 파일이름, 저장할 주소
-    download_file('virtual.txt', 'C:/Users/dealu/OneDrive/바탕 화면/프로젝트/project 2-2/virtual.txt')
+
+    # download_file("Microsoft-Windows-Sysmon%4Operational.evtx", 'C:/Users/dealu/OneDrive/바탕 화면/프로젝트/project 2-2/test/test.evtx')
+    download_file("..\\..\\..\\..\\..\\..\\Windows\\System32\\winevt\\Logs\\Microsoft-Windows-Sysmon%4Operational.evtx", 'C:/Users/dealu/OneDrive/바탕 화면/프로젝트/project 2-2/test/te222st.evtx')
