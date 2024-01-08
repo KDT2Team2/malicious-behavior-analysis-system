@@ -6,7 +6,7 @@ import subprocess
 import time
 import sys
 
-AGENT_URL = 'http://localhost:5000'
+AGENT_URL = 'http://localhost:8080'
 
 def get_request():
     response = requests.get(f'{AGENT_URL}/')
