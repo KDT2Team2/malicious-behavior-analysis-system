@@ -1,4 +1,5 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib import parse
 import json
 import os
 import subprocess
@@ -37,7 +38,7 @@ class MyRequestHandler(BaseHTTPRequestHandler):
             self.wfile.write(b'Hello, this is a GET request!')
         elif self.path.startswith('/download'):
             file_name = self.path.split('/')[-1]
-            file_data = load_file(file_name)
+            file_data = load_file(parse.unquote(file_name))
             if file_data:
                 self.send_response(200)
                 self.send_header('Content-type', 'application/octet-stream')
@@ -91,7 +92,7 @@ class MyRequestHandler(BaseHTTPRequestHandler):
 
 def run_server():
     # 가상환경 ip 주소
-    address = ('10.0.2.15', 8080)
+    address = ('0.0.0.0', 8080)
     with HTTPServer(address, MyRequestHandler) as server:
         print('Starting server...')
         server.serve_forever()
